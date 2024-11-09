@@ -1,0 +1,87 @@
+-- List of allowed Client IDs (replace these with actual Client IDs you want to allow)
+local allowedHWIDs = {
+    "C01521F7-F683-4C13-868B-05BB263ED23E",
+    "D8417B43-B754-4B5D-8CE7-BA81AA8B2861",
+    "A0675AB0-E793-41FF-B64E-DC07C9A02326",
+    "31CFBCAB-C300-4429-AA43-B7A6D57B739C",
+    -- Replace with actual Client ID(s)
+}
+
+-- Function to check if the player's Client ID is allowed
+local function checkHWID(playerHWID)
+    for _, hwid in pairs(allowedHWIDs) do
+        if playerHWID == hwid then
+            return true
+        end
+    end
+    return false
+end
+
+-- Function to retrieve the player's Client ID
+local function getPlayerHWID()
+    return game:GetService("RbxAnalyticsService"):GetClientId()  -- Using Client ID here
+end
+
+-- Function to display jumpscare, play audio, and apply jump & spin effect
+local function showJumpscareAndEffect()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+
+    -- Set jump power to make the player jump high
+    humanoid.JumpPower = 100000  -- Adjust this value to control how high the player jumps
+
+    -- Set the spin speed
+    local spinSpeed = 100  -- Adjust this value to control how fast the character spins
+
+    -- Make the player jump immediately
+    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
+    -- Make the player spin continuously
+    game:GetService("RunService").Heartbeat:Connect(function()
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+    end)
+
+    -- Create a ScreenGui for the jumpscare
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = game.Players.LocalPlayer.PlayerGui
+
+    -- Create an ImageLabel for the jumpscare image
+    local imageLabel = Instance.new("ImageLabel")
+    imageLabel.Parent = screenGui
+    imageLabel.Size = UDim2.new(1, 0, 1, 0)  -- Full screen
+    imageLabel.BackgroundTransparency = 1
+    imageLabel.Image = "rbxassetid://4494699567"  -- Replace with jumpscare image 
+
+    -- Create a Sound object for the "Access Denied" audio
+    local sound = Instance.new("Sound")
+    sound.Parent = game.Players.LocalPlayer.PlayerGui
+    sound.SoundId = "rbxassetid://7236490488"  -- Replace with audio 
+    sound.Volume = 10
+    sound:Play()
+
+    -- Remove the jumpscare after a few seconds
+    wait(2)
+    screenGui:Destroy()
+end
+
+-- Function to repeatedly show the jumpscare every 5 seconds
+local function repeatJumpscare()
+    while true do
+        showJumpscareAndEffect()  -- Show the jumpscare and apply effects
+        wait(15)  -- Wait 5 seconds before showing the jumpscare again
+    end
+end
+
+-- Get the player's Client ID
+local playerHWID = getPlayerHWID()
+
+-- Check if the Client ID is whitelisted
+if checkHWID(playerHWID) then
+    print("Client ID verified, loading main script.")
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/zzzcoder2/everything/refs/heads/main/main"))()
+else
+    print("Client ID not whitelisted, showing jumpscare and applying effects.")
+    repeatJumpscare()  -- Continuously show the jumpscare every 5 seconds and apply jump & spin effect
+end
